@@ -8,14 +8,14 @@
 yarn install
 ```
 
-## In root - create a auth_headers.yml file to contain username, password and referrer.
+## the following auth helpers you need to set as env variables
 
 i.e.
 
 ```
-username : foo
-password : bar
-referrer : arcgis.mydomain.com
+os.environ['username'] = <your username>
+os.environ['password'] = <your password>
+os.environ['referrer'] = arcgis.mydomain.com
 ```
 
 ## To run the app :

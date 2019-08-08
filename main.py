@@ -2,8 +2,15 @@ from flask import Flask, request, jsonify
 import json
 import requests
 import yaml
+import os
 
 app = Flask(__name__)
+
+os.environ['username'] = "<your username>"
+os.environ['password'] = "your password"
+os.environ['referrer'] = "arcgis.mydomain.com"
+
+env = os.environ.get
 
 @app.route('/')
 def index():
@@ -21,12 +28,10 @@ def get_data():
     geometryQuery = {"x":x, "y":y,"spatialReference":{"wkid":wkid}}
     
     ## Generating token
-    stream = open('auth_headers.yml', 'r')
-    settings = yaml.load(stream, yaml.SafeLoader)
     headers = {
-        'username': "{0}".format(settings['username']),
-        'password': "{0}".format(settings['password']),
-        'referrer': "{0}".format(settings['referrer'])
+        'username': "{0}".format(env('username')),
+        'password': "{0}".format(env('password')),
+        'referrer': "{0}".format(env('referrer'))
     }
     genereateToken = "https://services.geodataonline.no/arcgis/tokens/generateToken/query?username=%s&password=%s&referer=%s&f=pjson" % (headers['username'], headers['password'], headers['referrer'])
     headerToken = requests.get(genereateToken).json()
