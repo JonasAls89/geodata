@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 import json
 import requests
 import logging
@@ -11,8 +11,8 @@ app = Flask(__name__)
 logger = None
 
 ## On your local set the below env vars
-os.environ['username'] = "<your username>"
-os.environ['password'] = "<your password>"
+os.environ['username'] = ""
+os.environ['password'] = ""
 os.environ['referrer'] = "arcgis.mydomain.com"
 
 required_env_vars = ['username', 'password', 'referrer']
@@ -37,7 +37,7 @@ def index():
     }
     return jsonify(output)
 
-@app.route('/get_geo', methods=['GET'])
+@app.route('/get_geo', methods=['GET', 'POST'])
 def get_data():
     ## Validating env vars
     check_env_variables(required_env_vars, missing_env_vars)
@@ -71,9 +71,10 @@ def get_data():
     if geo_data.status_code != 200:
         app.logger.error(f"Unexpected response status code: {geo_data.content}")
         raise
+    geo_transform = geo_data.json()['fieldAliases']
     ##
 
-    return jsonify(geo_data.json())
+    return Response(json.dumps(geo_transform), mimetype='application/json')
 
 if __name__ == '__main__':
     # Set up logging
