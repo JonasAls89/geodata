@@ -71,7 +71,8 @@ def get_data():
     if geo_data.status_code != 200:
         app.logger.error(f"Unexpected response status code: {geo_data.content}")
         raise
-    geo_transform = geo_data.json()['fieldAliases']
+    geo_transform = geo_data.json()['features']
+    print(geo_transform)
     ##
 
     return Response(json.dumps(geo_transform), mimetype='application/json')
