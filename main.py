@@ -16,6 +16,10 @@ def index():
 @app.route('/get_geo', methods=['GET'])
 def get_data():
     wkid = request.args['wkid']
+    x = request.args['x']
+    y = request.args['y']
+    geometryQuery = {"x":x, "y":y,"spatialReference":{"wkid":wkid}}
+    
     ## Generating token
     stream = open('auth_headers.yml', 'r')
     settings = yaml.load(stream, yaml.SafeLoader)
@@ -29,7 +33,7 @@ def get_data():
     token = {'Authorization' : 'Bearer ' + headerToken['token']}
     
     ## Requesting geo data
-    request_url = "https://services.geodataonline.no/arcgis/rest/services/Geomap_UTM33_EUREF89/GeomapMatrikkel/MapServer/5/query?geometry=%7B%22x%22%3A485817%2C%22y%22%3A6478206%2C%22spatialReference%22%3A%7B%22wkid%22%3A25832%7D%7D&geometryType=esriGeometryPoint&inSR=25832&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=kommunenr%2Cgardsnr%2Cbruksnr&returnGeometry=false&returnTrueCurves=false&returnIdsOnly=false&returnCountOnly=false&returnZ=false&returnM=false&returnDistinctValues=false&f=pjson"
+    request_url = f"https://services.geodataonline.no/arcgis/rest/services/Geomap_UTM33_EUREF89/GeomapMatrikkel/MapServer/5/query?geometry={geometryQuery}&geometryType=esriGeometryPoint&inSR={wkid}&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=kommunenr%2Cgardsnr%2Cbruksnr&returnGeometry=false&returnTrueCurves=false&returnIdsOnly=false&returnCountOnly=false&returnZ=false&returnM=false&returnDistinctValues=false&f=pjson"
     test = requests.get(request_url, headers=token)
     return jsonify(test.json())
 
