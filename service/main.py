@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify, Response
 import json
 import requests
 import logging
-import yaml
 import os
 import sys
 
@@ -42,6 +41,8 @@ def get_data():
     check_env_variables(required_env_vars, missing_env_vars)
     ##
 
+    request_body = request.get_json()
+
     payload = {
         'username' : username,
         'password' : password,
@@ -49,9 +50,11 @@ def get_data():
     }    
 
     ## Query parameters for dynamic fetching
-    wkid = request.args['wkid']
-    x = request.args['x']
-    y = request.args['y']
+    wkid = 3857 ## Set as static val
+    x = request_body.get("x")
+    y = request_body.get("y")
+    if not x or not y:
+        app.logger.warning(f"The x or y coordinates '{x}', '{y}' are not provided in the right format")
     geometry_query = {"x":x, "y":y,"spatialReference":{"wkid":wkid}}
 
     ## Generating token and checking response
@@ -69,10 +72,12 @@ def get_data():
     geo_data = requests.get(request_url, headers=token)
     if geo_data.status_code != 200:
         app.logger.error(f"Unexpected response status code: {geo_data.content}")
+        return f"Unexpected error : {geo_data.content}", 500
         raise
     try:
         geo_transform = geo_data.json()['features'][0]
-    except IndexError:
+        sesam_dict = request_body, geo_transform
+    except IndexError or KeyError:
         geo_transform = {
             "attributes": {
                 'kommunenr': u'NaN',
@@ -80,9 +85,10 @@ def get_data():
                 'bruksnr': u'NaN'
             }
         }
+        sesam_dict = request_body, geo_transform
     ##
 
-    return Response(json.dumps(geo_transform).strip('[]'), mimetype='application/json')
+    return Response(json.dumps(sesam_dict), mimetype='application/json')
 
 if __name__ == '__main__':
     # Set up logging
