@@ -41,13 +41,13 @@ def get_data():
     check_env_variables(required_env_vars, missing_env_vars)
     ##
 
-    #request_body = request.get_json()
+    request_body = request.get_json()
 
     # In dev use the below request body
-    request_body = {
-        'x' : 994142.1292,
-        'y' : 8152855.6122
-    }
+    #request_body = {
+    #    'x' : 994142.1292,
+    #    'y' : 8152855.6122
+    #}
 
     payload = {
         'username' : username,
@@ -57,8 +57,8 @@ def get_data():
 
     ## Query parameters for dynamic fetching
     wkid = 3857 ## Set as static val
-    x = request_body.get("x")
-    y = request_body.get("y")
+    x = request_body["x"]
+    y = request_body["y"]
     if not x or not y:
         app.logger.warning(f"The x or y coordinates '{x}', '{y}' are not provided in the right format")
     geometry_query = {"x":x, "y":y,"spatialReference":{"wkid":wkid}}
