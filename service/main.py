@@ -41,7 +41,13 @@ def get_data():
     check_env_variables(required_env_vars, missing_env_vars)
     ##
 
-    request_body = request.get_json()
+    #request_body = request.get_json()
+
+    # In dev use the below request body
+    request_body = {
+        'x' : 994142.1292,
+        'y' : 8152855.6122
+    }
 
     payload = {
         'username' : username,

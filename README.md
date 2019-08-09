@@ -54,24 +54,33 @@ commands needed to run the app.
   "_id": "geodataconnector-ms",
   "type": "pipe",
   "source": {
-    "type": "json",
-    "system": "geodata-connector",
-    "url": "/get_geo?wkid=3857&x=<x-coordinate>&y=<y-coordinate>"
+    "type": "embedded",
+    "entities": [{
+      "_id": "my_test_id",
+      "x": "994142.1292",
+      "y": "8152855.6122"
+    }]
   },
   "transform": {
-    "type": "dtl",
-    "rules": {
-      "default": [
-        ["copy", "*"],
-        ["create",
-          ["apply", "create-entity", "_S.attributes"]
-        ],
-        ["discard"]
-      ],
-      "create-entity": [
-        ["copy", "*"]
-      ]
-    }
-  }
+    "type": "chained",
+    "transforms": [{
+      "type": "dtl",
+      "rules": {
+        "default": [
+          ["copy", "*"]
+        ]
+      }
+    }, {
+      "type": "http",
+      "system": "geodata-connector",
+      "batch_size": 1,
+      "url": "/get_geo"
+    }]
+  },
+  "pump": {
+    "mode": "manual"
+  },
+  "namespaced_identifiers": true
 }
+
 ```
