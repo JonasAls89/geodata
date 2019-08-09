@@ -8,6 +8,10 @@ import sys
 
 app = Flask(__name__)
 
+username = os.getenv('username')
+password = os.getenv('password')
+referrer = os.getenv('referrer')
+
 logger = None
 
 required_env_vars = ['username', 'password', 'referrer']
@@ -39,9 +43,9 @@ def get_data():
     ##
 
     payload = {
-        'username' : os.getenv('username'),
-        'password' : os.getenv('password'),
-        'referrer' : os.getenv('referrer')
+        'username' : username,
+        'password' : password,
+        'referrer' : referrer
     }    
 
     ## Query parameters for dynamic fetching

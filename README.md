@@ -26,15 +26,15 @@ commands needed to run the app.
 
 ## System example :
 
-1. Name the system ```get-geodata```
+1. Name the system ```geodata-connector```
 
 2. Config :
 ```
 {
-  "_id": "get-geodata",
+  "_id": "geodata-connector",
   "type": "system:microservice",
   "docker": {
-    "image": "<docker username>/get-geodata:latest",
+    "image": "<docker username>/geodata-connector:latest",
     "port": 5000,
     "username": "$ENV(<username for geodata account>)",
     "password": "$ENV(<password for geodata account>)",
@@ -46,16 +46,16 @@ commands needed to run the app.
 
 ## Pipe example :
 
-1. Name the pipe ```getgeodata-ms```
+1. Name the pipe ```geodataconnector-ms```
 
 2. Config :
 ```
 {
-  "_id": "getgeodata-ms",
+  "_id": "geodataconnector-ms",
   "type": "pipe",
   "source": {
     "type": "json",
-    "system": "get-geodata",
+    "system": "geodata-connector",
     "url": "/get_geo?wkid=3857&x=<x-coordinate>&y=<y-coordinate>"
   },
   "transform": {
