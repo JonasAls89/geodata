@@ -66,8 +66,16 @@ def get_data():
     if geo_data.status_code != 200:
         app.logger.error(f"Unexpected response status code: {geo_data.content}")
         raise
-    
-    geo_transform = geo_data.json()['features'][0]
+    try:
+        geo_transform = geo_data.json()['features'][0]
+    except IndexError:
+        geo_transform = {
+            "attributes": {
+                'kommunenr': u'NaN',
+                'gardsnr': u'NaN',
+                'bruksnr': u'NaN'
+            }
+        }
     ##
 
     return Response(json.dumps(geo_transform).strip('[]'), mimetype='application/json')
@@ -75,7 +83,7 @@ def get_data():
 if __name__ == '__main__':
     # Set up logging
     format_string = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logger = logging.getLogger('geodata-microservice')
+    logger = logging.getLogger('geodata-connector')
 
     # Log to stdout
     stdout_handler = logging.StreamHandler()
