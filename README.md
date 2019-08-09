@@ -35,7 +35,10 @@ commands needed to run the app.
   "type": "system:microservice",
   "docker": {
     "image": "<docker username>/get-geodata:latest",
-    "port": 5000
+    "port": 5000,
+    "username": $ENV(<username for geodata account>),
+    "password": $ENV(<password for geodata account>),
+    "referrer": $ENV("arcgis.mydomain.com")
   },
   "verify_ssl": true
 }
