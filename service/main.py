@@ -10,11 +10,6 @@ app = Flask(__name__)
 
 logger = None
 
-## On your local set the below env vars
-os.environ['username'] = ""
-os.environ['password'] = ""
-os.environ['referrer'] = "arcgis.mydomain.com"
-
 required_env_vars = ['username', 'password', 'referrer']
 missing_env_vars = list() 
 
@@ -71,11 +66,11 @@ def get_data():
     if geo_data.status_code != 200:
         app.logger.error(f"Unexpected response status code: {geo_data.content}")
         raise
-    geo_transform = geo_data.json()['features']
-    print(geo_transform)
+    
+    geo_transform = geo_data.json()['features'][0]
     ##
 
-    return Response(json.dumps(geo_transform), mimetype='application/json')
+    return Response(json.dumps(geo_transform).strip('[]'), mimetype='application/json')
 
 if __name__ == '__main__':
     # Set up logging

@@ -1,8 +1,9 @@
-FROM python:3.7-alpine
+FROM python:3-alpine
 MAINTAINER Jonas Als Christensen "jonas.christensen@sesam.io"
-COPY . .
-WORKDIR /
-RUN pip install -r requirements.txt
-EXPOSE 5000/tcp
-ENTRYPOINT ["python"]
-CMD ["main.py"]
+RUN apk update
+RUN pip3 install --upgrade pip
+COPY ./service/requirements.txt /service/requirements.txt
+RUN pip3 install -r /service/requirements.txt
+COPY ./service /service
+EXPOSE 5000 
+CMD ["python3","-u","./service/main.py"]
