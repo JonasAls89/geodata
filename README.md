@@ -3,13 +3,13 @@
 ## This is a repo for connecting to geodata.no
 This repo allows you to send x and y coordinates from SESAM and then in return get kommunenr, gårdsnr og bruksnr.
 
-## To install requirements run the following
+### To install requirements run the following
 
 ```
 yarn install
 ```
 
-## the following auth helpers you need to set as env variables
+### the following auth helpers you need to set as env variables
 
 i.e.
 
@@ -19,13 +19,13 @@ os.environ['password'] = <your password>
 os.environ['referrer'] = arcgis.mydomain.com
 ```
 
-## To run the app :
+### To run the app :
 in package.json you'll find the
 commands needed to run the app.
 
-## Config in Sesam
+### Config in Sesam
 
-## System example :
+#### System example :
 
 1. Name the system ```geodata-connector```
 
@@ -45,7 +45,7 @@ commands needed to run the app.
 }
 ```
 
-## Pipe example :
+#### Pipe example :
 
 1. Name the pipe ```geodataconnector-ms```
 
