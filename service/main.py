@@ -35,18 +35,18 @@ def index():
     }
     return jsonify(output)
 
-@app.route('/get_geo', methods=['GET', 'POST'])
+@app.route('/geo_data', methods=['POST'])
 def get_data():
     ## Validating env vars
     check_env_variables(required_env_vars, missing_env_vars)
     ##
 
     request_body = request.get_json()
-
+    
     # In dev use the below request body
     #request_body = [{
-    #    'x' : "~f994142.1292",
-    #    'y' : "~f8152855.6122"
+    #     'x' : 994142.1292,
+    #     'y' : "~f8152855.6122"
     #}]
 
     payload = {
@@ -57,11 +57,11 @@ def get_data():
 
     ## Query parameters for dynamic fetching
     wkid = 3857 ## Set as static val
-    x = request_body[0].get('x')
-    y = request_body[0].get('y')
+    x = str(request_body[0].get('x'))
+    y = str(request_body[0].get('y'))
     if '~f' in x or y:
-        x = str(x).strip('~f')
-        y = str(y).strip('~f')
+        x = x.strip('~f')
+        y = y.strip('~f')
 
     if not x or not y:
         app.logger.warning(f"The x or y coordinates '{x}', '{y}' are not provided in the right format")
