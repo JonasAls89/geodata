@@ -1,6 +1,7 @@
 # Geodata-Connector
 
 ## This is a repo for connecting to geodata.no
+This repo allows you to send x and y coordinates from SESAM and then in return get kommunenr, gårdsnr og bruksnr.
 
 ## To install requirements run the following
 

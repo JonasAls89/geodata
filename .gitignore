@@ -1,4 +1,6 @@
 /bin
 /node_modules
 auth_headers.yml
+docker-compose.yml
 venv
+/.vscode
