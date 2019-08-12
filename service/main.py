@@ -16,6 +16,15 @@ logger = None
 required_env_vars = ['username', 'password', 'referrer']
 missing_env_vars = list() 
 
+default_response = {
+    "attributes": {
+            'kommunenr': u'NaN',
+            'gardsnr': u'NaN',
+            'bruksnr': u'NaN'
+        }
+}
+
+
 ## Helper functions
 def check_env_variables(required_env_vars, missing_env_vars):
     for env_var in required_env_vars:
@@ -27,6 +36,12 @@ def check_env_variables(required_env_vars, missing_env_vars):
         app.logger.error(f"Missing the following required environment variable(s) {missing_env_vars}")
         sys.exit(1)
 
+## Merge helper function
+def dict_merger(dict1, dict2): 
+    res = {**dict1, **dict2} 
+    return res 
+
+
 @app.route('/')
 def index():
     output = {
@@ -37,6 +52,7 @@ def index():
 
 @app.route('/geo_data', methods=['POST'])
 def get_data():
+    app.logger.info(f"The geodata-connector is running")
     ## Validating env vars
     check_env_variables(required_env_vars, missing_env_vars)
     ##
@@ -51,8 +67,8 @@ def get_data():
 
     ## Query parameters for dynamic fetching
     wkid = 3857 ## Set as static val
-    x = str(request_body.get('x_coordinate'))
-    y = str(request_body.get('y_coordinate'))
+    x = str(request_body[0].get('x_coordinate'))
+    y = str(request_body[0].get('y_coordinate'))
     if '~f' in x or y:
         x = x.strip('~f')
         y = y.strip('~f')
@@ -80,16 +96,12 @@ def get_data():
         raise
     try:
         geo_transform = geo_data.json()['features'][0]
-        sesam_dict = request_body, geo_transform
-    except IndexError or KeyError:
-        geo_transform = {
-            "attributes": {
-                'kommunenr': u'NaN',
-                'gardsnr': u'NaN',
-                'bruksnr': u'NaN'
-            }
-        }
-        sesam_dict = request_body, geo_transform
+    except IndexError:
+        geo_transform = default_response
+    except KeyError:
+        geo_transform = default_response
+
+    sesam_dict = dict_merger(dict(request_body[0]), dict(geo_transform))
     ##
 
     return Response(json.dumps(sesam_dict), mimetype='application/json')
