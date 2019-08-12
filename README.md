@@ -9,7 +9,7 @@ This repo allows you to send x and y coordinates from SESAM and then in return g
 yarn install
 ```
 
-### the following auth helpers you need to set as env variables
+### The following auth helpers need to be set as env variables
 
 i.e.
 
