@@ -42,12 +42,6 @@ def get_data():
     ##
 
     request_body = request.get_json()
-    
-    # In dev use the below request body
-    #request_body = [{
-    #     'x' : 994142.1292,
-    #     'y' : "~f8152855.6122"
-    #}]
 
     payload = {
         'username' : username,
@@ -57,8 +51,8 @@ def get_data():
 
     ## Query parameters for dynamic fetching
     wkid = 3857 ## Set as static val
-    x = str(request_body[0].get('x'))
-    y = str(request_body[0].get('y'))
+    x = str(request_body.get('x_coordinate'))
+    y = str(request_body.get('y_coordinate'))
     if '~f' in x or y:
         x = x.strip('~f')
         y = y.strip('~f')
