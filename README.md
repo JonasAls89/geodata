@@ -56,9 +56,10 @@ commands needed to run the app.
   "source": {
     "type": "embedded",
     "entities": [{
-      "_id": "my_test_id",
-      "x": "994142.1292",
-      "y": "8152855.6122"
+      "_id": "<your ID>",
+      "wkid": 3857,
+      "x_coordinate": "~f994142.1292",
+      "y_coordinate": "~f8152855.6122"
     }]
   },
   "transform": {
@@ -67,14 +68,17 @@ commands needed to run the app.
       "type": "dtl",
       "rules": {
         "default": [
-          ["copy", "*"]
+          ["copy", "*"],
+          ["add", "::x_coordinate", "_S.x_coordinate"],
+          ["add", "::y_coordinate", "_S.y_coordinate"],
+          ["add", "::wkid", "_S.wkid"]
         ]
       }
     }, {
       "type": "http",
       "system": "geodata-connector",
       "batch_size": 1,
-      "url": "/get_geo"
+      "url": "/geo_data"
     }]
   },
   "pump": {
@@ -82,5 +86,4 @@ commands needed to run the app.
   },
   "namespaced_identifiers": true
 }
-
 ```

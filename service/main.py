@@ -17,13 +17,12 @@ required_env_vars = ['username', 'password', 'referrer']
 missing_env_vars = list() 
 
 default_response = {
-    "attributes": {
+    "geodata": {
             'kommunenr': u'NaN',
             'gardsnr': u'NaN',
             'bruksnr': u'NaN'
         }
 }
-
 
 ## Helper functions
 def check_env_variables(required_env_vars, missing_env_vars):
@@ -50,7 +49,7 @@ def index():
     }
     return jsonify(output)
 
-@app.route('/geo_data', methods=['POST'])
+@app.route('/geo_data', methods=['GET','POST'])
 def get_data():
     app.logger.info(f"The geodata-connector is running")
     ## Validating env vars
@@ -66,12 +65,13 @@ def get_data():
     }    
 
     ## Query parameters for dynamic fetching
-    wkid = 3857 ## Set as static val
+    wkid = str(request_body[0].get("wkid"))
     x = str(request_body[0].get('x_coordinate'))
     y = str(request_body[0].get('y_coordinate'))
     if '~f' in x or y:
         x = x.strip('~f')
         y = y.strip('~f')
+    app.logger.info(f"The x, y and wkid respectively '{x}', '{y}', '{wkid}'")
 
     if not x or not y:
         app.logger.warning(f"The x or y coordinates '{x}', '{y}' are not provided in the right format")
@@ -89,16 +89,21 @@ def get_data():
 
     ## Requesting geo data
     request_url = f"https://services.geodataonline.no/arcgis/rest/services/Geomap_UTM33_EUREF89/GeomapMatrikkel/MapServer/5/query?geometry={geometry_query}&geometryType=esriGeometryPoint&inSR={wkid}&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=kommunenr%2Cgardsnr%2Cbruksnr&returnGeometry=false&returnTrueCurves=false&returnIdsOnly=false&returnCountOnly=false&returnZ=false&returnM=false&returnDistinctValues=false&f=pjson"
+    #app.logger.info(request_url)
     geo_data = requests.get(request_url, headers=token)
-    if geo_data.status_code != 200:
+    if not geo_data.ok:
         app.logger.error(f"Unexpected response status code: {geo_data.content}")
         return f"Unexpected error : {geo_data.content}", 500
         raise
+    #app.logger.info(f"returning call with status code {geo_data.json()}")
     try:
         geo_transform = geo_data.json()['features'][0]
-    except IndexError:
+        geo_transform["geodata"] = geo_transform.pop("attributes")
+    except IndexError as e:
+        app.logger.error(f"exiting with error {e}")
         geo_transform = default_response
-    except KeyError:
+    except KeyError as e:
+        app.logger.error(f"exiting with error {e}")
         geo_transform = default_response
 
     sesam_dict = dict_merger(dict(request_body[0]), dict(geo_transform))
