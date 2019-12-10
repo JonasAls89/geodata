@@ -1,7 +1,7 @@
 # Geodata-Connector
 
 ## This is a repo for connecting to geodata.no
-This repo allows you to send x and y coordinates from SESAM and then in return get kommunenr, gårdsnr og bruksnr.
+This repo allows you to send a wkid and x and y coordinates from SESAM and then in return get kommunenr, gårdsnr og bruksnr.
 
 ### To install requirements run the following
 
@@ -23,6 +23,22 @@ os.environ['referrer'] = arcgis.mydomain.com
 in package.json you'll find the
 commands needed to run the app.
 
+## Expected payload on the /geo_data route:
+
+```
+
+ [{
+ "wkid": "3857",
+    "x_coordinate": "~f924159.9248",
+    "y_coordinate": "~f8025279.145"	
+ },{
+ 	"wkid": "3857",
+    "x_coordinate": "~f933165.1418",
+    "y_coordinate": "~f8020815.2854"
+ }]
+
+```
+
 ### Config in Sesam
 
 #### System example :
@@ -30,6 +46,7 @@ commands needed to run the app.
 1. Name the system ```geodata-connector```
 
 2. Config :
+
 ```
 {
   "_id": "geodata-connector",
@@ -50,6 +67,7 @@ commands needed to run the app.
 1. Name the pipe ```geodataconnector-ms```
 
 2. Config :
+
 ```
 {
   "_id": "geodataconnector-ms",
