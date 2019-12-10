@@ -3,25 +3,29 @@
 ## This is a repo for connecting to geodata.no
 This repo allows you to send a wkid and x and y coordinates from SESAM and then in return get kommunenr, gårdsnr og bruksnr.
 
-### To install requirements run the following
+## How to:
 
+*Run program in development*
+
+This repo uses the file ```package.json``` and [yarn](https://yarnpkg.com/lang/en/) to run the required commands.
+
+1. Make sure you have installed yarn.
+2. Creata a file called ```helpers.json``` and set username, password and referrer in the following format:
 ```
-yarn install
+{
+    "username": "some username",
+    "password": "some password",
+    "referrer": "referrer url"
+}
 ```
-
-### The following auth helpers need to be set as env variables
-
-i.e.
-
-```
-os.environ['username'] = <your username>
-os.environ['password'] = <your password>
-os.environ['referrer'] = arcgis.mydomain.com
-```
-
-### To run the app :
-in package.json you'll find the
-commands needed to run the app.
+3. run:
+    ```
+        yarn install
+    ```
+4. execute to run the script:
+    ```
+        yarn swagger
+    ```
 
 ## Expected payload on the /geo_data route:
 
