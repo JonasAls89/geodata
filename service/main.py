@@ -70,7 +70,8 @@ def get_data():
 
     app.logger.info(f"The geodata-connector is running")
 
-    request_body = request.get_json()
+    request_data = request.get_data()
+    json_data = json.loads(str(request_data.decode("utf-8")))
 
     payload = {
         'username' : username,
@@ -89,7 +90,7 @@ def get_data():
     ##
 
     return_object = [] 
-    for element in request_body:
+    for element in json_data[0].get("payload"):
         try:
             ## Query parameters for dynamic fetching
             wkid = str(element.get("wkid"))

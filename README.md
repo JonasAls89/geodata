@@ -31,7 +31,7 @@ This repo uses the file ```package.json``` and [yarn](https://yarnpkg.com/lang/e
 
 ```
 
- [{
+ [{ "payload": [{
  "wkid": "3857",
     "x_coordinate": "~f924159.9248",
     "y_coordinate": "~f8025279.145"	
@@ -40,6 +40,7 @@ This repo uses the file ```package.json``` and [yarn](https://yarnpkg.com/lang/e
     "x_coordinate": "~f933165.1418",
     "y_coordinate": "~f8020815.2854"
  }]
+}]
 
 ```
 
