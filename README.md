@@ -81,9 +81,12 @@ This repo uses the file ```package.json``` and [yarn](https://yarnpkg.com/lang/e
     "type": "embedded",
     "entities": [{
       "_id": "<your ID>",
+      "payload": [
+        {
       "wkid": 3857,
       "x_coordinate": "~f994142.1292",
       "y_coordinate": "~f8152855.6122"
+        }]
     }]
   },
   "transform": {
@@ -92,16 +95,23 @@ This repo uses the file ```package.json``` and [yarn](https://yarnpkg.com/lang/e
       "type": "dtl",
       "rules": {
         "default": [
-          ["copy", "*"],
-          ["add", "::x_coordinate", "_S.x_coordinate"],
-          ["add", "::y_coordinate", "_S.y_coordinate"],
-          ["add", "::wkid", "_S.wkid"]
+          ["add", "::payload",
+            ["map",
+              ["dict", "_id", "_S._id", "x_coordinate",
+                ["nth", 0,
+                  ["nth", 0, "_."]
+                ], "y_coordinate",
+                ["nth", 0,
+                  ["nth", 1, "_."]
+                ], "wkid", 3857],
+              ["first", "_S.geometry.netbas-cable:paths"]
+            ]
+          ]
         ]
       }
     }, {
       "type": "http",
       "system": "geodata-connector",
-      "batch_size": 1,
       "url": "/geo_data"
     }]
   },
