@@ -47,6 +47,18 @@ def stream_json(clean):
     yield ']'
 
 
+def get_token(payload):
+    ## Generating token and checking response
+    generate_url = "https://services.geodataonline.no/arcgis/tokens/generateToken/query?username=%s&password=%s&referer=%s&f=pjson" % (payload['username'], payload['password'], payload['referrer'])
+    check_response = requests.get(generate_url)
+    if not check_response.ok:
+        app.logger.error(f"Access token request failed. Error: {check_response.content}")
+        raise
+    valid_response = check_response.json()
+    return valid_response
+    ##
+
+
 ## Merge helper function
 def dict_merger(dict1, dict2): 
     res = {**dict1, **dict2} 
@@ -73,24 +85,23 @@ def get_data():
     request_data = request.get_data()
     json_data = json.loads(str(request_data.decode("utf-8")))
 
+    valid_response = None
     payload = {
         'username' : username,
         'password' : password,
         'referrer' : referrer
     }
 
-    ## Generating token and checking response
-    generate_url = "https://services.geodataonline.no/arcgis/tokens/generateToken/query?username=%s&password=%s&referer=%s&f=pjson" % (payload['username'], payload['password'], payload['referrer'])
-    check_response = requests.get(generate_url)
-    if not check_response.ok:
-        app.logger.error(f"Access token request failed. Error: {check_response.content}")
-        raise
-    valid_response = check_response.json()
-    token = {'Authorization' : 'Bearer ' + valid_response['token']}
-    ##
-
     return_object = []
     for element in json_data[0].get("payload"):
+        if valid_response == None:
+            app.logger.info("Requesting access token...")
+            valid_response = get_token(payload)
+            token = {'Authorization' : 'Bearer ' + valid_response['token']}
+        if valid_response['expires'] <= 10:
+            app.logger.info("Refreshing access token...")
+            valid_response = get_token(payload)
+            token = {'Authorization' : 'Bearer ' + valid_response['token']}
         try:
             ## Query parameters for dynamic fetching
             wkid = str(element.get("wkid"))
