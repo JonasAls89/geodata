@@ -89,7 +89,7 @@ def get_data():
     token = {'Authorization' : 'Bearer ' + valid_response['token']}
     ##
 
-    return_object = [] 
+    return_object = []
     for element in json_data[0].get("payload"):
         try:
             ## Query parameters for dynamic fetching
@@ -128,13 +128,19 @@ def get_data():
         except Exception as e:
             app.logger.warning(f"Service not working correctly. Failing with error : {e}")
 
+    transform_response = []
     if json_data[0].get("_id"):
-        _id = ({"_id" : f'{json_data[0].get("_id")}'})
-        return_object.append(_id)
+        return_dictionary = {
+        "_id": f"{json_data[0].get('_id')}",
+        "geo_response": return_object
+        }
+        transform_response.append(return_dictionary)
     else:
         app.logger.info(f"No _id provided in payload...")
+        return_dictionary = { "geo_response": return_object }
+        transform_response.append(return_dictionary)
 
-    return Response(stream_json(return_object), mimetype='application/json')
+    return Response(stream_json(transform_response), mimetype='application/json')
 
 if __name__ == '__main__':
     # Set up logging
