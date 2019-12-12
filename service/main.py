@@ -107,13 +107,12 @@ def get_data():
 
             ## Requesting geo data
             request_url = f"https://services.geodataonline.no/arcgis/rest/services/Geomap_UTM33_EUREF89/GeomapMatrikkel/MapServer/5/query?geometry={geometry_query}&geometryType=esriGeometryPoint&inSR={wkid}&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=kommunenr%2Cgardsnr%2Cbruksnr&returnGeometry=false&returnTrueCurves=false&returnIdsOnly=false&returnCountOnly=false&returnZ=false&returnM=false&returnDistinctValues=false&f=pjson"
-            #app.logger.info(request_url)
             geo_data = requests.get(request_url, headers=token)
             if not geo_data.ok:
                 app.logger.error(f"Unexpected response status code: {geo_data.content}")
                 return f"Unexpected error : {geo_data.content}", 500
                 raise
-            #app.logger.info(f"returning call with status code {geo_data.json()}")
+
             try:
                 geo_transform = geo_data.json()['features'][0]
                 geo_transform["geodata"] = geo_transform.pop("attributes")
@@ -128,6 +127,12 @@ def get_data():
             ##
         except Exception as e:
             app.logger.warning(f"Service not working correctly. Failing with error : {e}")
+
+    if json_data[0].get("_id"):
+        _id = ({"_id" : f'{json_data[0].get("_id")}'})
+        return_object.append(_id)
+    else:
+        app.logger.info(f"No _id provided in payload...")
 
     return Response(stream_json(return_object), mimetype='application/json')
 
