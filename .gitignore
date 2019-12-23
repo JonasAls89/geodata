@@ -3,4 +3,4 @@
 helpers.json
 docker-compose.yml
 venv
-/.vscode
+.vscode
