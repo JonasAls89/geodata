@@ -1,12 +1,12 @@
 from flask import Flask, request, jsonify, Response
-from sesamutils import VariablesConfig 
+from sesamutils import VariablesConfig, sesam_logger 
 import json
 import requests
-import logging
 import os
 import sys
 
 app = Flask(__name__)
+logger = sesam_logger("Steve the logger", app=app)
 
 ## Logic for running program in dev
 try:
@@ -17,13 +17,12 @@ try:
         os.environ["referrer"] = env_vars[88:107]
     stream.close()
 except OSError as e:
-    app.logger.info("Using env vars defined in SESAM")
+    logger.info("Using env vars defined in SESAM")
 
 username = os.getenv('username')
 password = os.getenv('password')
 referrer = os.getenv('referrer')
 
-logger = None
 required_env_vars = ['username', 'password', 'referrer']
 
 default_response = {
@@ -52,7 +51,7 @@ def get_token(payload):
     generate_url = "https://services.geodataonline.no/arcgis/tokens/generateToken/query?username=%s&password=%s&referer=%s&f=pjson" % (payload['username'], payload['password'], payload['referrer'])
     check_response = requests.get(generate_url)
     if not check_response.ok:
-        app.logger.error(f"Access token request failed. Error: {check_response.content}")
+        logger.error(f"Access token request failed. Error: {check_response.content}")
         raise
     valid_response = check_response.json()
     return valid_response
@@ -80,7 +79,7 @@ def get_data():
     if not config.validate():
         sys.exit(1)
 
-    app.logger.info(f"The geodata-connector is running")
+    logger.info(f"The geodata-connector is running")
 
     request_data = request.get_data()
     json_data = json.loads(str(request_data.decode("utf-8")))
@@ -95,11 +94,11 @@ def get_data():
     return_object = []
     for element in json_data[0].get("payload"):
         if valid_response == None:
-            app.logger.info("Requesting access token...")
+            logger.info("Requesting access token...")
             valid_response = get_token(payload)
             token = {'Authorization' : 'Bearer ' + valid_response['token']}
         if valid_response['expires'] <= 10:
-            app.logger.info("Refreshing access token...")
+            logger.info("Refreshing access token...")
             valid_response = get_token(payload)
             token = {'Authorization' : 'Bearer ' + valid_response['token']}
         try:
@@ -110,17 +109,17 @@ def get_data():
             if '~f' in x or y:
                 x = x.strip('~f')
                 y = y.strip('~f')
-            app.logger.info(f"The x, y and wkid respectively '{x}', '{y}', '{wkid}'")
+            logger.info(f"The x, y and wkid respectively '{x}', '{y}', '{wkid}'")
 
             if not x or not y:
-                app.logger.warning(f"The x or y coordinates '{x}', '{y}' are not provided in the right format")
+                logger.warning(f"The x or y coordinates '{x}', '{y}' are not provided in the right format")
             geometry_query = {"x":x, "y":y,"spatialReference":{"wkid":wkid}}
 
             ## Requesting geo data
             request_url = f"https://services.geodataonline.no/arcgis/rest/services/Geomap_UTM33_EUREF89/GeomapMatrikkel/MapServer/5/query?geometry={geometry_query}&geometryType=esriGeometryPoint&inSR={wkid}&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=kommunenr%2Cgardsnr%2Cbruksnr&returnGeometry=false&returnTrueCurves=false&returnIdsOnly=false&returnCountOnly=false&returnZ=false&returnM=false&returnDistinctValues=false&f=pjson"
             geo_data = requests.get(request_url, headers=token)
             if not geo_data.ok:
-                app.logger.error(f"Unexpected response status code: {geo_data.content}")
+                logger.error(f"Unexpected response status code: {geo_data.content}")
                 return f"Unexpected error : {geo_data.content}", 500
                 raise
 
@@ -128,16 +127,16 @@ def get_data():
                 geo_transform = geo_data.json()['features'][0]
                 geo_transform["geodata"] = geo_transform.pop("attributes")
             except IndexError as e:
-                app.logger.error(f"exiting with error {e}")
+                logger.error(f"exiting with error {e}")
                 geo_transform = default_response
             except KeyError as e:
-                app.logger.error(f"exiting with error {e}")
+                logger.error(f"exiting with error {e}")
                 geo_transform = default_response
             sesam_dict = dict_merger(dict(element), dict(geo_transform))
             return_object.append(sesam_dict)
             ##
         except Exception as e:
-            app.logger.warning(f"Service not working correctly. Failing with error : {e}")
+            logger.warning(f"Service not working correctly. Failing with error : {e}")
 
     transform_response = []
     if json_data[0].get("_id"):
@@ -147,21 +146,11 @@ def get_data():
         }
         transform_response.append(return_dictionary)
     else:
-        app.logger.info(f"No _id provided in payload...")
+        logger.info(f"No _id provided in payload...")
         return_dictionary = { "geo_response": return_object }
         transform_response.append(return_dictionary)
 
     return Response(stream_json(transform_response), mimetype='application/json')
 
 if __name__ == '__main__':
-    # Set up logging
-    format_string = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logger = logging.getLogger('geodata-connector')
-
-    # Log to stdout
-    stdout_handler = logging.StreamHandler()
-    stdout_handler.setFormatter(logging.Formatter(format_string))
-    logger.addHandler(stdout_handler)
-
-    logger.setLevel(logging.DEBUG)
     app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
