@@ -15,6 +15,9 @@ try:
         os.environ["username"] = env_vars[20:35]
         os.environ["password"] = env_vars[56:67]
         os.environ["referrer"] = env_vars[88:107]
+        os.environ["fylke_id"] = env_vars[127:129]
+        os.environ["attributes"] = env_vars[151:184]
+        os.environ["base_url"] = env_vars[204:244]
     stream.close()
 except OSError as e:
     logger.info("Using env vars defined in SESAM")
@@ -22,8 +25,12 @@ except OSError as e:
 username = os.getenv('username')
 password = os.getenv('password')
 referrer = os.getenv('referrer')
+fylke_id = os.getenv('fylke_id')
+base_url = os.getenv('base_url')
+attributes = os.getenv('attributes')
 
-required_env_vars = ['username', 'password', 'referrer']
+required_env_vars = ['username', 'password', 'referrer', 'base_url']
+optional_env_vars = ['fylke_id', 'attributes']
 
 default_response = {
     "geodata": {
@@ -46,9 +53,10 @@ def stream_json(clean):
     yield ']'
 
 
-def get_token(payload):
+def get_token(config):
     ## Generating token and checking response
-    generate_url = "https://services.geodataonline.no/arcgis/tokens/generateToken/query?username=%s&password=%s&referer=%s&f=pjson" % (payload['username'], payload['password'], payload['referrer'])
+    generate_url = f"{config.base_url}/tokens/generateToken/query?username={config.username}&password={config.password}&referer={config.referrer}&f=pjson"
+
     check_response = requests.get(generate_url)
     if not check_response.ok:
         logger.error(f"Access token request failed. Error: {check_response.content}")
@@ -85,21 +93,16 @@ def get_data():
     json_data = json.loads(str(request_data.decode("utf-8")))
 
     valid_response = None
-    payload = {
-        'username' : username,
-        'password' : password,
-        'referrer' : referrer
-    }
 
     return_object = []
     for element in json_data[0].get("payload"):
         if valid_response == None:
             logger.info("Requesting access token...")
-            valid_response = get_token(payload)
+            valid_response = get_token(config)
             token = {'Authorization' : 'Bearer ' + valid_response['token']}
         if valid_response['expires'] <= 10:
             logger.info("Refreshing access token...")
-            valid_response = get_token(payload)
+            valid_response = get_token(config)
             token = {'Authorization' : 'Bearer ' + valid_response['token']}
         try:
             ## Query parameters for dynamic fetching
@@ -116,7 +119,7 @@ def get_data():
             geometry_query = {"x":x, "y":y,"spatialReference":{"wkid":wkid}}
 
             ## Requesting geo data
-            request_url = f"https://services.geodataonline.no/arcgis/rest/services/Geomap_UTM33_EUREF89/GeomapMatrikkel/MapServer/5/query?geometry={geometry_query}&geometryType=esriGeometryPoint&inSR={wkid}&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=kommunenr%2Cgardsnr%2Cbruksnr&returnGeometry=false&returnTrueCurves=false&returnIdsOnly=false&returnCountOnly=false&returnZ=false&returnM=false&returnDistinctValues=false&f=pjson"
+            request_url = f"{config.base_url}/rest/services/Geomap_UTM33_EUREF89/GeomapMatrikkel/MapServer/5/query?geometry={geometry_query}&geometryType=esriGeometryPoint&inSR={wkid}&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=kommunenr%2Cgardsnr%2Cbruksnr&returnGeometry=false&returnTrueCurves=false&returnIdsOnly=false&returnCountOnly=false&returnZ=false&returnM=false&returnDistinctValues=false&f=pjson"
             geo_data = requests.get(request_url, headers=token)
             if not geo_data.ok:
                 logger.error(f"Unexpected response status code: {geo_data.content}")
@@ -151,6 +154,57 @@ def get_data():
         transform_response.append(return_dictionary)
 
     return Response(stream_json(transform_response), mimetype='application/json')
+
+
+@app.route('/fylke', methods=['GET'])
+def fylke_data():
+    config = VariablesConfig(required_env_vars, optional_env_vars)
+    if not config.validate():
+        sys.exit(1)
+
+    logger.info(f"The geodata-connector is running")
+
+    valid_response = None
+    exceed_limit = True
+    result_offset = 0
+    result_record_count = 5000
+
+    if valid_response == None:
+        logger.info("Requesting access token...")
+        valid_response = get_token(config)
+        token = {'Authorization' : 'Bearer ' + valid_response['token']}
+    if valid_response['expires'] <= 10:
+        logger.info("Refreshing access token...")
+        valid_response = get_token(config)
+        token = {'Authorization' : 'Bearer ' + valid_response['token']}  
+    
+    while exceed_limit is not None:
+        try: 
+            request_url = f"{config.base_url}/rest/services/Geomap_UTM33_EUREF89/GeomapMatrikkel/FeatureServer/4/query?where=fylkeid={config.fylke_id}&f=pjson&outFields={config.attributes}&returnExceededLimitFeatures=True&resultOffset={str(result_offset)}&resultRecordCount{str(result_record_count)}"
+            data = requests.get(request_url, headers=token)
+            decoded_data = json.loads(data.content.decode('utf-8-sig'))
+            logger.info(f"extending result as exceed page limit is still {exceed_limit}")
+
+            if not data.ok:
+                logger.error(f"Unexpected response status code: {data.content}")
+                return f"Unexpected error : {data.content}", 500
+                raise
+            else:
+                try:
+                    exceed_limit = decoded_data["exceededTransferLimit"]
+                except Exception:
+                    exceed_limit = None
+                
+                if exceed_limit is not None:
+                    result_offset+=int(result_record_count)
+                    logger.info(f"Result offset is now {result_offset}")
+                
+        except Exception as e:
+            logger.warning(f"Service not working correctly. Failing with error : {e}")
+
+    logger.info("Returning objects...")
+    return Response(stream_json(decoded_data['features']), mimetype='application/json')
+                
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
