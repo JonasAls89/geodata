@@ -67,6 +67,7 @@ This repo uses the file ```package.json``` and [yarn](https://yarnpkg.com/lang/e
   "type": "system:microservice",
   "docker": {
     "image": "<docker username>/geodata-connector:latest",
+    "memory": 512,
     "port": 5000,
     "username": "$ENV(<username for geodata account>)",
     "password": "$ENV(<password for geodata account>)",
