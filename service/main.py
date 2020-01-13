@@ -167,6 +167,7 @@ def fylke_data():
     valid_response = None
     exceed_limit = True
     result_offset = 0
+    return_object = []
     result_record_count = 5000
 
     if valid_response == None:
@@ -183,6 +184,7 @@ def fylke_data():
             request_url = f"{config.base_url}/rest/services/Geomap_UTM33_EUREF89/GeomapMatrikkel/FeatureServer/4/query?where=fylkeid={config.fylke_id}&f=pjson&outFields={config.attributes}&returnExceededLimitFeatures=True&resultOffset={str(result_offset)}&resultRecordCount{str(result_record_count)}"
             data = requests.get(request_url, headers=token)
             decoded_data = json.loads(data.content.decode('utf-8-sig'))
+            return_object.extend(decoded_data['features'])
             logger.info(f"extending result as exceed page limit is still {exceed_limit}")
 
             if not data.ok:
@@ -198,12 +200,12 @@ def fylke_data():
                 if exceed_limit is not None:
                     result_offset+=int(result_record_count)
                     logger.info(f"Result offset is now {result_offset}")
-                
+
         except Exception as e:
             logger.warning(f"Service not working correctly. Failing with error : {e}")
 
     logger.info("Returning objects...")
-    return Response(stream_json(decoded_data['features']), mimetype='application/json')
+    return Response(stream_json(return_object), mimetype='application/json')
                 
 
 if __name__ == '__main__':
