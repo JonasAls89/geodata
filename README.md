@@ -1,7 +1,13 @@
 # Geodata-Connector
 
 ## This is a repo for connecting to geodata.no
-This repo allows you to send a wkid and x and y coordinates from SESAM and then in return get kommunenr, gårdsnr og bruksnr.
+This repo allows you to send a wkid and x and y coordinates from SESAM and then in return get kommunenr, gårdsnr og bruksnr on the /geo_data route.
+
+## Routes:
+
+```/geo_data```
+
+```/fylke```
 
 ## How to:
 
@@ -15,7 +21,10 @@ This repo uses the file ```package.json``` and [yarn](https://yarnpkg.com/lang/e
 {
     "username": "some username",
     "password": "some password",
-    "referrer": "referrer url"
+    "referrer": "referrer url",
+    "fylke_id": "some int",
+    "attributes": "kommunenr,gardsnr,bruksnr,festenr",
+    "base_url": "https://services.geodataonline.no/arcgis"
 }
 ```
 3. run:
@@ -61,7 +70,10 @@ This repo uses the file ```package.json``` and [yarn](https://yarnpkg.com/lang/e
     "port": 5000,
     "username": "$ENV(<username for geodata account>)",
     "password": "$ENV(<password for geodata account>)",
-    "referrer": "$ENV(arcgis.mydomain.com)"
+    "referrer": "$ENV(arcgis.mydomain.com)",
+    "base_url":"https://services.geodataonline.no/arcgis",
+    "fylke_id": "<number>",
+    "attributes": "<string_elements_comma_separated>" i.e. kommunenr,gardsnr,bruksnr,festenr
   },
   "verify_ssl": true
 }
