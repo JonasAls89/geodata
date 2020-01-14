@@ -22,13 +22,6 @@ try:
 except OSError as e:
     logger.info("Using env vars defined in SESAM")
 
-username = os.getenv('username')
-password = os.getenv('password')
-referrer = os.getenv('referrer')
-fylke_id = os.getenv('fylke_id')
-base_url = os.getenv('base_url')
-attributes = os.getenv('attributes')
-
 required_env_vars = ['username', 'password', 'referrer', 'base_url']
 optional_env_vars = ['fylke_id', 'attributes']
 
